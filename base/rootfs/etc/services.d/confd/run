@@ -1,3 +1,9 @@
 #!/usr/bin/with-contenv bash
-set -e 
-confd-render-templates.sh --continuous
+set -vxe
+
+if [ -n "${CONFD_NOOP}" ] && [ "false" != "${CONFD_NOOP}" ]
+then
+  confd-render-templates.sh
+else
+  confd-render-templates.sh --continuous
+fi
