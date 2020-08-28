@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bash
+set -vx
 
 # Capitalize the given string.
 function capitalize {
@@ -311,10 +312,10 @@ function update_settings_php {
         chmod a=rwx "${site_directory}/settings.php"
     fi
 
-    drush -l "${site_url}" islandora:settings:create-settings-if-missing
-    drush -l "${site_url}" islandora:settings:set-hash-salt "${salt}"
-    drush -l "${site_url}" islandora:settings:set-flystem-fedora-url "${fedora_url}"
-    drush -l "${site_url}" islandora:settings:set-database-settings \
+    drush -vvv -l "${site_url}" islandora:settings:create-settings-if-missing
+    drush -vvv -l "${site_url}" islandora:settings:set-hash-salt "${salt}"
+    drush -vvv -l "${site_url}" islandora:settings:set-flystem-fedora-url "${fedora_url}"
+    drush -vvv -l "${site_url}" islandora:settings:set-database-settings \
         "${db_name}" \
         "${user}" \
         "${password}" \
@@ -325,7 +326,7 @@ function update_settings_php {
     # Specifiying the config_dir is optional, some users will hardcode it in 
     # their settings.php so it does not need updating.
     if [ ! -z "${config_dir}" ]; then
-        drush -l "${site_url}" islandora:settings:set-config-sync-directory ${config_dir}
+        drush -vvv -l "${site_url}" islandora:settings:set-config-sync-directory ${config_dir}
     fi
 
     # Restore owner/group to previous value
@@ -341,8 +342,8 @@ function update_settings_php {
 function configure_jwt_module {
     local site="${1}"
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
-    drush -l "${site_url}" -y pm:enable jwt
-    drush -l "${site_url}" -y config:import --partial --source=/etc/islandora/configs/jwt
+    drush -vvv -l "${site_url}" -y pm:enable jwt
+    drush -vvv -l "${site_url}" -y config:import --partial --source=/etc/islandora/configs/jwt
 }
 
 # Install and configure the islandora module.
@@ -356,15 +357,15 @@ function configure_islandora_module {
     local gemini_port=$(drupal_site_env "${site}" "GEMINI_PORT")
     local gemini_url="http://${gemini_host}:${gemini_port}"
 
-    drush -l "${site_url}" -y pm:enable islandora
-    drush -l "${site_url}" -y config:set --input-format=yaml jsonld.settings remove_jsonld_format true
-    drush -l "${site_url}" -y config:set --input-format=yaml islandora.settings broker_url "${broker_url}"
-    drush -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_url "${gemini_url}"
-    drush -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.0 "islandora_object:node"
-    drush -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.1 "image:media"
-    drush -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.2 "file:media"
-    drush -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.3 "audio:media"
-    drush -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.4 "video:media"
+    drush -vvv -l "${site_url}" -y pm:enable islandora
+    drush -vvv -l "${site_url}" -y config:set --input-format=yaml jsonld.settings remove_jsonld_format true
+    drush -vvv -l "${site_url}" -y config:set --input-format=yaml islandora.settings broker_url "${broker_url}"
+    drush -vvv -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_url "${gemini_url}"
+    drush -vvv -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.0 "islandora_object:node"
+    drush -vvv -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.1 "image:media"
+    drush -vvv -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.2 "file:media"
+    drush -vvv -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.3 "audio:media"
+    drush -vvv -l "${site_url}" -y config:set --input-format=yaml islandora.settings gemini_pseudo_bundles.4 "video:media"
 }
 
 # After enabling and importing features a number of configurations need to be updated.
@@ -374,9 +375,9 @@ function configure_islandora_default_module {
     local host=$(drupal_site_env "${site}" "SOLR_HOST")
     local port=$(drupal_site_env "${site}" "SOLR_PORT")
 
-    drush -l "${site_url}" -y user:role:add fedoraadmin admin
-    drush -l "${site_url}" -y config:set search_api.server.default_solr_server backend_config.connector_config.host "${host}"
-    drush -l "${site_url}" -y config:set search_api.server.default_solr_server backend_config.connector_config.port "${port}"
+    drush -vvv -l "${site_url}" -y user:role:add fedoraadmin admin
+    drush -vvv -l "${site_url}" -y config:set search_api.server.default_solr_server backend_config.connector_config.host "${host}"
+    drush -vvv -l "${site_url}" -y config:set search_api.server.default_solr_server backend_config.connector_config.port "${port}"
 }
 
 # Install search_api_solr and configure. Also uninstall the default search module.
@@ -385,11 +386,11 @@ function configure_search_api_solr_module {
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
     local driver=$(drupal_site_env "${site}" "DB_DRIVER")
 
-    drush -l "${site_url}" -y pm:enable search_api_solr
+    drush -vvv -l "${site_url}" -y pm:enable search_api_solr
 
     # Currently a bug when using PostgreSQL that disallows unintalling this module.
     if [ "${driver}" != "pgsql" ]; then
-        drush -l "${site_url}" -y pm:uninstall search
+        drush -vvv -l "${site_url}" -y pm:uninstall search
     fi
 }
 
@@ -397,8 +398,8 @@ function configure_search_api_solr_module {
 function set_carapace_default_theme {
     local site="${1}"; shift
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
-    drush -l "${site_url}" -y theme:enable carapace
-    drush -l "${site_url}" -y config:set system.theme default carapace
+    drush -vvv -l "${site_url}" -y theme:enable carapace
+    drush -vvv -l "${site_url}" -y config:set system.theme default carapace
 }
 
 # Generate solr config using the search_api_solr module.
@@ -413,7 +414,7 @@ function generate_solr_config {
 
     mkdir -p "/tmp/${core}" || true
     chmod a+rwx "/tmp/${core}"
-    drush -l "${site_url}" -y search-api-solr:get-server-config default_solr_server "/tmp/${core}/solr_config.zip" 7.1
+    drush -vvv -l "${site_url}" -y search-api-solr:get-server-config default_solr_server "/tmp/${core}/solr_config.zip" 7.1
     mkdir -p "${dest}/conf" || true
     mkdir -p "${dest}/data" || true
     unzip -o "/tmp/${core}/solr_config.zip" -d "${dest}/conf"
@@ -450,10 +451,10 @@ function configure_matomo_module {
     local matomo_url=$(drupal_site_env "${site}" "MATOMO_URL")
     local matomo_http_url="http${matomo_url#https}"
 
-    drush -l "${site_url}" -y pm:enable matomo
-    drush -l "${site_url}" -y config-set matomo.settings site_id "${site_id}"
-    drush -l "${site_url}" -y config-set matomo.settings url_http "${matomo_http_url}"
-    drush -l "${site_url}" -y config-set matomo.settings url_https "${matomo_url}"
+    drush -vvv -l "${site_url}" -y pm:enable matomo
+    drush -vvv -l "${site_url}" -y config-set matomo.settings site_id "${site_id}"
+    drush -vvv -l "${site_url}" -y config-set matomo.settings url_http "${matomo_http_url}"
+    drush -vvv -l "${site_url}" -y config-set matomo.settings url_https "${matomo_url}"
 }
 
 # Configure Openseadragon to point use cantaloupe.
@@ -462,24 +463,24 @@ function configure_openseadragon  {
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
     local cantaloupe_url=$(drupal_site_env "${site}" "CANTALOUPE_URL")
 
-    drush -l "${site_url}" -y config-set --input-format=yaml media.settings standalone_url true
-    drush -l "${site_url}" -y config-set --input-format=yaml openseadragon.settings iiif_server "${cantaloupe_url}"
-    drush -l "${site_url}" -y config-set --input-format=yaml openseadragon.settings manifest_view iiif_manifest
-    drush -l "${site_url}" -y config-set --input-format=yaml islandora_iiif.settings iiif_server "${cantaloupe_url}"
+    drush -vvv -l "${site_url}" -y config-set --input-format=yaml media.settings standalone_url true
+    drush -vvv -l "${site_url}" -y config-set --input-format=yaml openseadragon.settings iiif_server "${cantaloupe_url}"
+    drush -vvv -l "${site_url}" -y config-set --input-format=yaml openseadragon.settings manifest_view iiif_manifest
+    drush -vvv -l "${site_url}" -y config-set --input-format=yaml islandora_iiif.settings iiif_server "${cantaloupe_url}"
 }
 
 # Imports any migrations in the 'islandora' group.
 function import_islandora_migrations {
     local site="${1}"; shift
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
-    drush -l "${site_url}" -y --userid=1 migrate:import --group=islandora
+    drush -vvv -l "${site_url}" -y --userid=1 migrate:import --group=islandora
 }
 
 # Enable module and apply configuration.
 function enable_modules {
     local site="${1}"; shift
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
-    drush -l "${site_url}" -y pm:enable ${@}
+    drush -vvv -l "${site_url}" -y pm:enable ${@}
 }
 
 # Enable module and apply configuration.
@@ -487,14 +488,14 @@ function import_features {
     local site="${1}"; shift
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
     local features=$(join_by , ${@}); shift
-    drush -l "${site_url}" fim --no-interaction --yes "${features}"
+    drush -vvv -l "${site_url}" fim --no-interaction --yes "${features}"
 }
 
 # Rebuild the cache for the given site.
 function cache_rebuild {
     local site="${1}"; shift
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
-    drush -l "${site_url}" -y cache:rebuild
+    drush -vvv -l "${site_url}" -y cache:rebuild
 }
 
 # Changes the site ID to match the configuration folder to allow it to be imported.
@@ -504,7 +505,7 @@ function set_site_uuid {
     local drupal_root=$(drush drupal:directory)
     local config_dir=$(cd $drupal_root; realpath `drush php:eval "echo \Drupal\Core\Site\Settings::get('config_sync_directory');"`) # Handle the case if config_dir is a relative path.
     local uuid=${1-$(cat ${config_dir}/system.site.yml  | awk '/uuid/ { print $2 }')}
-    drush -l ${site_url} -y config:set --input-format=yaml system.site uuid ${uuid}
+    drush -vvv -l ${site_url} -y config:set --input-format=yaml system.site uuid ${uuid}
 }
 
 # Replace references to standard profile in the config files with minimal.
@@ -527,14 +528,14 @@ function remove_standard_profile_references_from_config {
 function import_config {
     local site="${1}"
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
-    drush -l ${site_url} -y config:import
+    drush -vvv -l ${site_url} -y config:import
 }
 
 # Export sites configuration.
 function export_config {
     local site="${1}"
     local site_url=$(drupal_site_env "${site}" "SITE_URL")
-    drush -l ${site_url} -y config:export
+    drush -vvv -l ${site_url} -y config:export
 }
 
 # Generates blazegraph properties for the given site using its namespace.
