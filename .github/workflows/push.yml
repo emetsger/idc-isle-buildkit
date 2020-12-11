@@ -37,6 +37,9 @@ jobs:
       id: output-image-tag
       # Set the image tag, same used by the isle-gradle-docker-plugin
       run: echo ::set-output name=image-tag::$(git describe --tags --always --first-parent)
+    # TODO: remove
+    - name: Image list
+      run: docker images
   test:
     name: Run idc-isle-dc Tests
     needs: build
