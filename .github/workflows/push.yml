@@ -32,7 +32,7 @@ jobs:
           ${{ runner.os }}-gradle-
     - name: Build Docker images
       # N.B. when projects are excluded from building (e.g '-x <project>:build'), insure that other jobs (e.g. those in main.yml) are updated.
-      run: ./gradlew build -Prepository=local --info -x demo:build -x matomo:build -x recast:build -x milliner:build -x postgresql:build -x fcrepo:build -x blazegraph:build
+      run: ./gradlew build -Prepository='local' --info -x demo:build -x matomo:build -x recast:build -x milliner:build -x postgresql:build -x fcrepo:build -x blazegraph:build
     - name: Output image tag
       id: output-image-tag
       # Set the image tag, same used by the isle-gradle-docker-plugin
@@ -58,6 +58,8 @@ jobs:
           sed -i.bak -e 's@^TAG.*$@TAG=${{needs.build.outputs.image-tag}}@' .env
           sed -i.bak -e 's@^REPOSITORY.*$@REPOSITORY=local@' .env
           egrep '(^TAG|^REPOSITORY)' .env
+          docker images
+          docker inspect local/drupal:${{needs.build.outputs.image-tag}}
       - name: Make static image
         run: make static-docker-compose.yml
       - name: Run smoke tests
